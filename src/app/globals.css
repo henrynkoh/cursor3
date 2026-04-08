@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Landing: smooth section scroll + stable gutter */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Scrollable sidebar rail */
+.landing-sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(14 165 233 / 0.45) transparent;
+}
+
+.landing-sidebar-scroll::-webkit-scrollbar {
+  width: 7px;
+}
+
+.landing-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.landing-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgb(14 165 233 / 0.55),
+    rgb(6 182 212 / 0.45)
+  );
+  border-radius: 9999px;
+}
+
+/* Hero mesh — subtle motion (respect reduced motion) */
+@keyframes landing-float {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translate(2%, -2%) scale(1.05);
+    opacity: 0.75;
+  }
+}
+
+@keyframes landing-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.hero-mesh-blob {
+  animation: landing-float 18s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-mesh-blob {
+    animation: none;
+  }
+}
+
+.hero-shimmer {
+  background-size: 200% 200%;
+  animation: landing-shimmer 12s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-shimmer {
+    animation: none;
+  }
+}
