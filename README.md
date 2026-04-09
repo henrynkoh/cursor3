@@ -53,8 +53,11 @@ seattle-cursor-vibe-week/
 │   ├── app/              # App Router pages
 │   ├── components/       # UI (landing, header, playbook copy blocks)
 │   └── data/
-│       ├── curriculum.ts # Program copy & 7-day plans
-│       └── promptPack.ts # Playbook prompts
+│       ├── curriculum.ts # Re-exports program, days, goals, logistics
+│       ├── domain.ts     # Program metadata, goals, prerequisites, resources
+│       ├── days.ts       # Full 7-day curriculum (expanded; rental comms track)
+│       ├── types.ts      # DayPlan / SessionBlock types
+│       └── promptPack.ts # Playbook: browser, rental (5 tracks), Claude/Forge, PII
 ├── docs/                 # Manual, tutorial, quickstart, marketing
 ├── package.json
 └── README.md

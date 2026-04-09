@@ -11,17 +11,18 @@ This tutorial walks through **editing the curriculum**, **local development**, a
 
 ## 2. Change program copy
 
-1. Open `src/data/curriculum.ts`.
-2. Edit `program` (title, subtitle, cohort), `days[]` (sessions, homework, key takeaways), or `logistics`.
-3. If you add/remove days, update the `days` array length and any hard-coded “7” references (search the repo for `7` in day context).
+1. **`src/data/domain.ts`** — `program`, `goals`, `prerequisites`, `resources`, `logistics`, `programFeatures`, `VIDEO_ID`.
+2. **`src/data/days.ts`** — the seven `DayPlan` entries (sessions, homework, key takeaways). This file is long on purpose (expanded rental-communication track).
+3. **`src/data/curriculum.ts`** — re-exports the above for a stable import path (`@/data/curriculum`).
+4. If you add/remove days, update `days` and any hard-coded “7” references in the app.
 
 **Video:** `VIDEO_ID` must match the YouTube ID (e.g. `Uffw_SKXmz0`).
 
 ## 3. Change playbook prompts
 
-1. Open `src/data/promptPack.ts`.
+1. Open `src/data/promptPack.ts` (browser, rental tracks: listings, screening, leases, rent/reminders, maintenance, Claude Code/Forge alignment, PII).
 2. Add or edit `promptSections` entries (`title`, `description`, `prompts[]` with `label` + `body`).
-3. The `/playbook` page renders these with copy buttons (`PromptCopyBlock`).
+3. The `/playbook` page renders these with copy buttons (`PromptCopyBlock`). Rental prompts are illustrative — not legal advice; align with counsel for binding copy.
 
 ## 4. Styling and branding
 
