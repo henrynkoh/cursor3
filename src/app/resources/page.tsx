@@ -50,27 +50,39 @@ export default function ResourcesPage() {
 
       <section className="mt-12">
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-          External links
+          Links
         </h2>
         <ul className="mt-6 space-y-4">
-          {resources.map((r) => (
-            <li
-              key={r.href}
-              className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
-            >
-              <a
-                href={r.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-sky-700 hover:underline dark:text-sky-400"
+          {resources.map((r) => {
+            const external = r.href.startsWith("http");
+            return (
+              <li
+                key={r.href}
+                className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
               >
-                {r.title}
-              </a>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-                {r.description}
-              </p>
-            </li>
-          ))}
+                {external ? (
+                  <a
+                    href={r.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-sky-700 hover:underline dark:text-sky-400"
+                  >
+                    {r.title}
+                  </a>
+                ) : (
+                  <Link
+                    href={r.href}
+                    className="font-medium text-sky-700 hover:underline dark:text-sky-400"
+                  >
+                    {r.title}
+                  </Link>
+                )}
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                  {r.description}
+                </p>
+              </li>
+            );
+          })}
         </ul>
       </section>
 

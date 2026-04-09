@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { DashboardNavTrigger } from "@/components/dashboard/DashboardNavTrigger";
 
 const nav = [
   { href: "/", label: "Overview" },
   { href: "/playbook", label: "Playbook" },
+  { href: "/rent-comms", label: "Rent comms" },
   { href: "/resources", label: "Resources" },
   { href: "/logistics", label: "Logistics" },
 ];
@@ -18,6 +20,17 @@ export function SiteHeader() {
           Cursor Vibe Week
         </Link>
         <nav className="flex flex-wrap items-center gap-1 text-sm">
+          <DashboardNavTrigger />
+          <Link
+            href="/dashboard"
+            className="rounded-md px-2 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950/50"
+            title="Open HQ dashboard full page"
+          >
+            HQ ↗
+          </Link>
+          <span className="mx-0.5 hidden text-slate-300 sm:inline dark:text-slate-600">
+            |
+          </span>
           {nav.map((item) => (
             <Link
               key={item.href}

@@ -602,21 +602,35 @@ export function HomeLanding() {
               ))}
             </ul>
             <div className="mt-8 grid gap-4 md:grid-cols-2">
-              {resources.map((r) => (
-                <a
-                  key={r.href}
-                  href={r.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group block rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white to-cyan-50/60 p-6 shadow-md transition hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-lg dark:border-slate-800 dark:from-slate-900 dark:to-cyan-950/30"
-                >
-                  <span className="font-bold text-slate-900 dark:text-white">{r.title}</span>
-                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{r.description}</p>
-                  <span className="mt-3 inline-flex text-sm font-bold text-cyan-600 group-hover:underline dark:text-cyan-400">
-                    Visit →
-                  </span>
-                </a>
-              ))}
+              {resources.map((r) => {
+                const external = r.href.startsWith("http");
+                const cardClass =
+                  "group block rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white to-cyan-50/60 p-6 shadow-md transition hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-lg dark:border-slate-800 dark:from-slate-900 dark:to-cyan-950/30";
+                const inner = (
+                  <>
+                    <span className="font-bold text-slate-900 dark:text-white">{r.title}</span>
+                    <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{r.description}</p>
+                    <span className="mt-3 inline-flex text-sm font-bold text-cyan-600 group-hover:underline dark:text-cyan-400">
+                      {external ? "Visit →" : "Open →"}
+                    </span>
+                  </>
+                );
+                return external ? (
+                  <a
+                    key={r.href}
+                    href={r.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cardClass}
+                  >
+                    {inner}
+                  </a>
+                ) : (
+                  <Link key={r.href} href={r.href} className={cardClass}>
+                    {inner}
+                  </Link>
+                );
+              })}
             </div>
             <Link
               href="/resources"

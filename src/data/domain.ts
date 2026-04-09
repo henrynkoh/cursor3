@@ -122,6 +122,12 @@ export const resources = [
     description: "Branches, PRs, and code review—your week ends with merged, reviewable work.",
   },
   {
+    title: "Rent email & SMS templates (this site)",
+    href: "/rent-comms",
+    description:
+      "Per-step drafts: rent schedule, pre-due reminders, due today, post-due nudge, firm/late, second notice, partial payment, holiday/weekend processing — email + SMS with merge tags.",
+  },
+  {
     title: "Claude Code documentation",
     href: "https://code.claude.com/docs",
     description:
