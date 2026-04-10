@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   activityMeta,
   getEventsForMonth,
@@ -10,6 +10,10 @@ import {
   type ActivityType,
   type DashboardEvent,
 } from "@/data/dashboardEvents";
+import {
+  getPropertyById,
+  type RentalProperty,
+} from "@/data/rentalProperties";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -31,6 +35,154 @@ type Props = {
   embedded?: boolean;
 };
 
+function collectPropertyIds(events: DashboardEvent[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const e of events) {
+    for (const id of e.propertyIds ?? []) {
+      if (!seen.has(id)) {
+        seen.add(id);
+        out.push(id);
+      }
+    }
+  }
+  return out;
+}
+
+function PropertyDetailBlock({ property }: { property: RentalProperty }) {
+  const fmt = (d: string) =>
+    new Date(d + "T12:00:00").toLocaleDateString("en-US", {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  const fmtComm = (at: string) =>
+    new Date(at).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+
+  const sortedComm = [...property.communications].sort(
+    (a, b) => new Date(b.at).getTime() - new Date(a.at).getTime(),
+  );
+
+  return (
+    <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+          Property
+        </p>
+        <p className="mt-1 font-bold text-white">{property.propertyName}</p>
+        <p className="mt-1 text-sm text-slate-300">{property.propertyAddress}</p>
+        <p className="mt-2 text-xs text-slate-400">
+          AFH licensed beds:{" "}
+          <span className="font-semibold text-sky-200">
+            {property.afhLicensedBeds}
+          </span>
+        </p>
+      </div>
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+          Tenant / operator
+        </p>
+        <p className="mt-1 text-sm text-white">{property.tenantName}</p>
+        <ul className="mt-2 space-y-1.5 text-sm text-slate-300">
+          <li>
+            <span className="text-slate-500">Email:</span>{" "}
+            <a
+              href={`mailto:${property.email}`}
+              className="text-sky-300 underline decoration-sky-500/40 hover:text-sky-200"
+            >
+              {property.email}
+            </a>
+          </li>
+          <li>
+            <span className="text-slate-500">Phone:</span>{" "}
+            <a
+              href={`tel:${property.phone.replace(/\s/g, "")}`}
+              className="text-sky-300 underline decoration-sky-500/40 hover:text-sky-200"
+            >
+              {property.phone}
+            </a>
+          </li>
+          <li>
+            <span className="text-slate-500">Website:</span>{" "}
+            <a
+              href={property.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-indigo-300 underline decoration-indigo-500/40 hover:text-indigo-200"
+            >
+              {property.website.replace(/^https?:\/\//, "")}
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div className="rounded-xl border border-white/10 bg-slate-900/50 p-3">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+          Rent
+        </p>
+        <dl className="mt-2 grid gap-2 text-sm">
+          <div className="flex justify-between gap-2">
+            <dt className="text-slate-500">Start</dt>
+            <dd className="text-right text-slate-200">
+              {fmt(property.rentStart)}
+            </dd>
+          </div>
+          <div className="flex justify-between gap-2">
+            <dt className="text-slate-500">Expiration</dt>
+            <dd className="text-right text-slate-200">
+              {fmt(property.rentExpiration)}
+            </dd>
+          </div>
+          <div className="flex justify-between gap-2">
+            <dt className="text-slate-500">Amount</dt>
+            <dd className="text-right font-semibold text-amber-200">
+              {property.rentCurrency}{" "}
+              {property.rentAmount.toLocaleString("en-US", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              })}
+              / period
+            </dd>
+          </div>
+          <div>
+            <dt className="text-slate-500">Schedule</dt>
+            <dd className="mt-1 text-slate-200">{property.rentSchedule}</dd>
+          </div>
+        </dl>
+      </div>
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+          Communication history
+        </p>
+        <ul className="mt-2 max-h-56 space-y-2 overflow-y-auto pr-1 text-xs">
+          {sortedComm.map((c) => (
+            <li
+              key={c.id}
+              className="rounded-lg border border-white/5 bg-slate-900/40 p-2"
+            >
+              <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-500">
+                <span className="rounded bg-white/10 px-1.5 py-0.5 font-bold uppercase text-slate-300">
+                  {c.channel}
+                </span>
+                <span>{fmtComm(c.at)}</span>
+              </div>
+              {c.subject && (
+                <p className="mt-1 font-semibold text-slate-200">{c.subject}</p>
+              )}
+              <p className="mt-0.5 text-slate-400">{c.summary}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
 export function RentalHQDashboard({ onClose, embedded }: Props) {
   const today = new Date();
   const [view, setView] = useState(() => ({
@@ -38,7 +190,10 @@ export function RentalHQDashboard({ onClose, embedded }: Props) {
     m: today.getMonth(),
   }));
   const [filterFn, setFilterFn] = useState<string | "all">("all");
-  const [selected, setSelected] = useState<DashboardEvent | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(
+    null,
+  );
 
   const events = useMemo(
     () => getEventsForMonth(view.y, view.m),
@@ -82,6 +237,29 @@ export function RentalHQDashboard({ onClose, embedded }: Props) {
   const iso = (day: number) =>
     `${view.y}-${pad(view.m + 1)}-${pad(day)}`;
 
+  const dayEventsForSelected = useMemo(() => {
+    if (!selectedDate) return [];
+    return byDate.get(selectedDate) ?? [];
+  }, [byDate, selectedDate]);
+
+  const propertyIdsForDay = useMemo(
+    () => collectPropertyIds(dayEventsForSelected),
+    [dayEventsForSelected],
+  );
+
+  const selectedProperty = selectedPropertyId
+    ? getPropertyById(selectedPropertyId)
+    : undefined;
+
+  const selectDay = useCallback(
+    (dateStr: string, events: DashboardEvent[]) => {
+      setSelectedDate(dateStr);
+      const ids = collectPropertyIds(events);
+      setSelectedPropertyId(ids[0] ?? null);
+    },
+    [],
+  );
+
   return (
     <div
       className={`min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-slate-100 ${
@@ -102,7 +280,8 @@ export function RentalHQDashboard({ onClose, embedded }: Props) {
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href="/dashboard"
-              className="hidden rounded-lg border border-white/15 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-white/5 sm:inline"
+              onClick={() => onClose?.()}
+              className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-white/5"
             >
               Open as page
             </Link>
@@ -212,7 +391,7 @@ export function RentalHQDashboard({ onClose, embedded }: Props) {
           </div>
         </div>
 
-        <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_320px]">
+        <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_minmax(300px,420px)]">
           {/* Calendar */}
           <div className="rounded-3xl border border-white/10 bg-slate-900/50 p-4 shadow-2xl sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
@@ -270,18 +449,19 @@ export function RentalHQDashboard({ onClose, embedded }: Props) {
                   today.getMonth() === view.m &&
                   today.getDate() === cell;
 
+                const isSelectedDay = selectedDate === dateStr;
+
                 return (
                   <button
                     key={dateStr}
                     type="button"
-                    onClick={() => {
-                      const first = dayEvents[0];
-                      if (first) setSelected(first);
-                    }}
+                    onClick={() => selectDay(dateStr, dayEvents)}
                     className={`flex min-h-[72px] flex-col rounded-lg border p-1.5 text-left transition hover:border-sky-400/50 hover:bg-white/5 sm:min-h-[88px] sm:p-2 ${
-                      isToday
-                        ? "border-sky-400/60 bg-sky-500/10 ring-1 ring-sky-400/40"
-                        : "border-white/5 bg-slate-800/40"
+                      isSelectedDay
+                        ? "border-sky-400 ring-2 ring-sky-400/50"
+                        : isToday
+                          ? "border-sky-400/60 bg-sky-500/10 ring-1 ring-sky-400/40"
+                          : "border-white/5 bg-slate-800/40"
                     }`}
                   >
                     <span
@@ -333,37 +513,118 @@ export function RentalHQDashboard({ onClose, embedded }: Props) {
           </div>
 
           {/* Detail panel */}
-          <div className="space-y-4">
+          <div className="space-y-4 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:pr-1">
             <div className="rounded-2xl border border-white/10 bg-indigo-950/40 p-5">
               <h3 className="text-sm font-bold uppercase tracking-wide text-indigo-200">
                 Day detail
               </h3>
-              {selected ? (
+              {!selectedDate ? (
+                <p className="mt-3 text-sm text-slate-500">
+                  Select a calendar day to see HQ activities and linked
+                  properties.
+                </p>
+              ) : dayEventsForSelected.length === 0 ? (
                 <div className="mt-3">
-                  <p className="text-xs text-slate-500">{selected.date}</p>
-                  <p className="mt-1 text-lg font-bold text-white">
-                    {selected.title}
-                  </p>
-                  <p className="mt-2 text-sm text-slate-300">{selected.detail}</p>
-                  <span
-                    className={`mt-3 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                      selected.priority === "critical"
-                        ? "bg-rose-500/20 text-rose-200"
-                        : selected.priority === "high"
-                          ? "bg-amber-500/20 text-amber-200"
-                          : "bg-slate-600/40 text-slate-300"
-                    }`}
-                  >
-                    {selected.priority}
-                  </span>
-                  <p className="mt-3 text-xs text-slate-500">
-                    Type: {activityMeta[selected.type].label}
+                  <p className="text-xs text-slate-500">{selectedDate}</p>
+                  <p className="mt-2 text-sm text-slate-400">
+                    No activities for this day under the current filter.
                   </p>
                 </div>
               ) : (
-                <p className="mt-3 text-sm text-slate-500">
-                  Select a calendar day with markers to inspect HQ activities.
-                </p>
+                <div className="mt-3 space-y-4">
+                  <p className="text-xs text-slate-500">
+                    {new Date(selectedDate + "T12:00:00").toLocaleDateString(
+                      "en-US",
+                      {
+                        weekday: "long",
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      },
+                    )}
+                  </p>
+                  <ul className="space-y-3">
+                    {dayEventsForSelected.map((ev) => {
+                      const meta = activityMeta[ev.type];
+                      return (
+                        <li
+                          key={ev.id}
+                          className="rounded-xl border border-white/10 bg-slate-900/40 p-3"
+                        >
+                          <div className="flex flex-wrap items-start gap-2">
+                            <span
+                              className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-[11px] font-bold ring-1 ${meta.color} ${meta.ring} bg-slate-950/80`}
+                            >
+                              {meta.mark}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-bold text-white">{ev.title}</p>
+                              <p className="mt-0.5 text-sm text-slate-400">
+                                {ev.detail}
+                              </p>
+                              <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px]">
+                                <span className="text-slate-500">
+                                  {meta.label}
+                                </span>
+                                <span
+                                  className={`rounded-full px-2 py-0.5 font-bold uppercase ${
+                                    ev.priority === "critical"
+                                      ? "bg-rose-500/20 text-rose-200"
+                                      : ev.priority === "high"
+                                        ? "bg-amber-500/20 text-amber-200"
+                                        : "bg-slate-600/40 text-slate-300"
+                                  }`}
+                                >
+                                  {ev.priority}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+
+                  {propertyIdsForDay.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                        Linked properties
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {propertyIdsForDay.map((pid) => {
+                          const p = getPropertyById(pid);
+                          const label = p?.propertyName ?? pid;
+                          const active = selectedPropertyId === pid;
+                          return (
+                            <button
+                              key={pid}
+                              type="button"
+                              onClick={() => setSelectedPropertyId(pid)}
+                              className={`max-w-full truncate rounded-lg border px-3 py-1.5 text-left text-xs font-semibold transition ${
+                                active
+                                  ? "border-sky-400 bg-sky-500/20 text-white ring-1 ring-sky-400/40"
+                                  : "border-white/10 bg-white/5 text-slate-300 hover:border-white/20"
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedProperty && (
+                    <PropertyDetailBlock property={selectedProperty} />
+                  )}
+
+                  {propertyIdsForDay.length > 0 && !selectedProperty && (
+                    <p className="text-xs text-rose-300/90">
+                      Property record missing for one of the linked IDs (demo
+                      data).
+                    </p>
+                  )}
+                </div>
               )}
             </div>
             <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 text-xs leading-relaxed text-slate-400">

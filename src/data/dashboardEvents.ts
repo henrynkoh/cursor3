@@ -19,6 +19,8 @@ export type DashboardEvent = {
   title: string;
   detail: string;
   priority: "normal" | "high" | "critical";
+  /** Linked rental properties (see rentalProperties.ts). Empty = portfolio-wide. */
+  propertyIds?: string[];
 };
 
 export const activityMeta: Record<
@@ -121,22 +123,141 @@ export const hqFunctions = [
   },
 ] as const;
 
+const P = {
+  aurora: "prop-aurora",
+  greenlake: "prop-greenlake",
+  redmond: "prop-redmond",
+  kirkland: "prop-kirkland",
+} as const;
+
 /** Demo events — replace with API. Mixed with generated anchor dates per month in getEventsForMonth. */
 export const sampleEvents: DashboardEvent[] = [
-  { id: "2", date: "2026-04-02", type: "maintenance", title: "HVAC vendor batch", detail: "Buildings A–C", priority: "normal" },
-  { id: "3", date: "2026-04-03", type: "rent_reminder", title: "T-3 reminders", detail: "Automated SMS/email", priority: "normal" },
-  { id: "4", date: "2026-04-05", type: "inspection", title: "Annual safety", detail: "Unit blocks 101–120", priority: "high" },
-  { id: "5", date: "2026-04-07", type: "lease_renewal", title: "Renewal window opens", detail: "90-day cohort", priority: "normal" },
-  { id: "6", date: "2026-04-08", type: "delinquency", title: "Collections stand-up", detail: "A/R > 10d", priority: "critical" },
-  { id: "7", date: "2026-04-10", type: "compliance_audit", title: "Notice template audit", detail: "Jurisdiction pack v3", priority: "high" },
-  { id: "8", date: "2026-04-12", type: "move_in", title: "Move-in weekend", detail: "12 units staged", priority: "normal" },
-  { id: "9", date: "2026-04-14", type: "owner_report", title: "Owner statements", detail: "Q1 distribution", priority: "normal" },
-  { id: "10", date: "2026-04-15", type: "rent_reminder", title: "Mid-month ACH nudge", detail: "Optional payment plan cohort", priority: "normal" },
-  { id: "11", date: "2026-04-18", type: "maintenance", title: "Emergency drill", detail: "After-hours routing test", priority: "high" },
-  { id: "12", date: "2026-04-20", type: "move_out", title: "Move-out block", detail: "Turn scheduling", priority: "normal" },
-  { id: "13", date: "2026-04-22", type: "rent_reminder", title: "Late notices prep", detail: "Counsel review slot", priority: "critical" },
-  { id: "14", date: "2026-04-25", type: "inspection", title: "Exterior walk", detail: "HOA coordination", priority: "normal" },
-  { id: "15", date: "2026-04-28", type: "lease_renewal", title: "Offer deadline", detail: "Tier-1 incentives", priority: "high" },
+  {
+    id: "2",
+    date: "2026-04-02",
+    type: "maintenance",
+    title: "HVAC vendor batch",
+    detail: "Buildings A–C",
+    priority: "normal",
+    propertyIds: [P.aurora, P.greenlake],
+  },
+  {
+    id: "3",
+    date: "2026-04-03",
+    type: "rent_reminder",
+    title: "T-3 reminders",
+    detail: "Automated SMS/email",
+    priority: "normal",
+    propertyIds: [P.aurora, P.redmond, P.kirkland],
+  },
+  {
+    id: "4",
+    date: "2026-04-05",
+    type: "inspection",
+    title: "Annual safety",
+    detail: "Unit blocks 101–120",
+    priority: "high",
+    propertyIds: [P.greenlake],
+  },
+  {
+    id: "5",
+    date: "2026-04-07",
+    type: "lease_renewal",
+    title: "Renewal window opens",
+    detail: "90-day cohort",
+    priority: "normal",
+    propertyIds: [P.redmond, P.kirkland],
+  },
+  {
+    id: "6",
+    date: "2026-04-08",
+    type: "delinquency",
+    title: "Collections stand-up",
+    detail: "A/R > 10d",
+    priority: "critical",
+    propertyIds: [P.greenlake],
+  },
+  {
+    id: "7",
+    date: "2026-04-10",
+    type: "compliance_audit",
+    title: "Notice template audit",
+    detail: "Jurisdiction pack v3",
+    priority: "high",
+    propertyIds: [P.aurora, P.greenlake, P.redmond, P.kirkland],
+  },
+  {
+    id: "8",
+    date: "2026-04-12",
+    type: "move_in",
+    title: "Move-in weekend",
+    detail: "12 units staged",
+    priority: "normal",
+    propertyIds: [P.redmond],
+  },
+  {
+    id: "9",
+    date: "2026-04-14",
+    type: "owner_report",
+    title: "Owner statements",
+    detail: "Q1 distribution",
+    priority: "normal",
+    propertyIds: [P.kirkland],
+  },
+  {
+    id: "10",
+    date: "2026-04-15",
+    type: "rent_reminder",
+    title: "Mid-month ACH nudge",
+    detail: "Optional payment plan cohort",
+    priority: "normal",
+    propertyIds: [P.aurora, P.greenlake],
+  },
+  {
+    id: "11",
+    date: "2026-04-18",
+    type: "maintenance",
+    title: "Emergency drill",
+    detail: "After-hours routing test",
+    priority: "high",
+    propertyIds: [P.aurora, P.redmond],
+  },
+  {
+    id: "12",
+    date: "2026-04-20",
+    type: "move_out",
+    title: "Move-out block",
+    detail: "Turn scheduling",
+    priority: "normal",
+    propertyIds: [P.kirkland],
+  },
+  {
+    id: "13",
+    date: "2026-04-22",
+    type: "rent_reminder",
+    title: "Late notices prep",
+    detail: "Counsel review slot",
+    priority: "critical",
+    propertyIds: [P.greenlake],
+  },
+  {
+    id: "14",
+    date: "2026-04-25",
+    type: "inspection",
+    title: "Exterior walk",
+    detail: "HOA coordination",
+    priority: "normal",
+    propertyIds: [P.redmond],
+  },
+  {
+    id: "15",
+    date: "2026-04-28",
+    type: "lease_renewal",
+    title: "Offer deadline",
+    detail: "Tier-1 incentives",
+    priority: "high",
+    propertyIds: [P.redmond, P.kirkland],
+  },
 ];
 
 export function getEventsForMonth(year: number, monthIndex: number): DashboardEvent[] {
@@ -147,6 +268,7 @@ export function getEventsForMonth(year: number, monthIndex: number): DashboardEv
   const has = (day: number) =>
     sample.some((e) => e.date === `${ym}-${pad(day)}`);
   const extra: DashboardEvent[] = [];
+  const allProps = [P.aurora, P.greenlake, P.redmond, P.kirkland];
   if (!has(1)) {
     extra.push({
       id: `gen-${ym}-01`,
@@ -155,6 +277,7 @@ export function getEventsForMonth(year: number, monthIndex: number): DashboardEv
       title: "Portfolio rent due",
       detail: "Primary cycle — all units",
       priority: "high",
+      propertyIds: allProps,
     });
   }
   if (lastDay >= 15 && !has(15)) {
@@ -165,6 +288,7 @@ export function getEventsForMonth(year: number, monthIndex: number): DashboardEv
       title: "Mid-month ACH / second cycle",
       detail: "Per portfolio rules",
       priority: "normal",
+      propertyIds: allProps,
     });
   }
   if (!has(lastDay)) {
@@ -175,6 +299,7 @@ export function getEventsForMonth(year: number, monthIndex: number): DashboardEv
       title: "Month-end close",
       detail: "Ledger lock + reports",
       priority: "high",
+      propertyIds: allProps,
     });
   }
   return [...sample, ...extra].sort((a, b) => a.date.localeCompare(b.date));
